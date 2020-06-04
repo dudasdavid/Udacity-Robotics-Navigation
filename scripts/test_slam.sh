@@ -1,7 +1,13 @@
-#!/bin/sh
-xterm  -e  " source /opt/ros/kinetic/setup.bash; roscore" & 
-sleep 5
-xterm  -e  " source ../../../devel/setup.bash; roslaunch turtlebot_gazebo turtlebot_world.launch" &    
+#!/bin/bash
+
+# build the workspace
+cd $(pwd)/../../..; catkin_make
+
+source devel/setup.bash
+source /opt/ros/kinetic/setup.bash
+export TURTLEBOT_GAZEBO_WORLD_FILE="$(pwd)/src/Udacity-Robotics-Navigation/worlds/MyWorld.world"
+
+xterm  -e  " roslaunch turtlebot_gazebo turtlebot_world.launch" &    
 sleep 5
 xterm  -e  " roslaunch turtlebot_gazebo gmapping_demo.launch" & 
 sleep 5
