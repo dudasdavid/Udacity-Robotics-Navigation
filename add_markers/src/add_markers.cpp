@@ -24,12 +24,13 @@ int main( int argc, char** argv )
 
   // Set our initial shape type to be a cube
   uint32_t shape = visualization_msgs::Marker::CUBE;
+
+  // Define the list of positions and orientations for marker
   float waypoints[2][3] = { 
                             { 2.5, 2,  1.57}, 
                             {-7,   3, -3.14}  
                           };
 
-  bool is_collected = false;
   visualization_msgs::Marker marker;
   // Set the frame ID and timestamp.  See the TF tutorials for information on these.
   marker.header.frame_id = "map";
@@ -66,13 +67,14 @@ int main( int argc, char** argv )
 
   marker.lifetime = ros::Duration();
 
+  bool is_collected = false;
   float x_distance, y_distance;
-  float pickup_range = 0.1;
+  float pickup_range = 0.4;
 
   while (ros::ok())
   {
 
-    //ROS_INFO("Odom data: %f, %f", odom_x, odom_y);
+    // before pick up
     if (!is_collected)
     {
       // Publish the marker
@@ -80,18 +82,24 @@ int main( int argc, char** argv )
       x_distance = fabs(waypoints[0][0] - odom_x);
       y_distance = fabs(waypoints[0][1] - odom_y);
 
+      //ROS_INFO("Distance to pick-up target: %1.2f", sqrt(pow(x_distance, 2) + pow(y_distance, 2)));
+
       if( sqrt(pow(x_distance, 2) + pow(y_distance, 2)) < pickup_range ) {
           marker.action = visualization_msgs::Marker::DELETE;
           marker_pub.publish(marker);
 
           is_collected = true;
+          ROS_INFO("Object is picked up!");
       }
 
     }
+    // after pick up
     else
     {
       x_distance = fabs(waypoints[1][0] - odom_x);
       y_distance = fabs(waypoints[1][1] - odom_y);
+
+      //ROS_INFO("Distance to drop-off target: %1.2f", sqrt(pow(x_distance, 2) + pow(y_distance, 2)));
 
       if( sqrt(pow(x_distance, 2) + pow(y_distance, 2)) < pickup_range ) {
         marker.action = visualization_msgs::Marker::ADD;
@@ -101,6 +109,9 @@ int main( int argc, char** argv )
         marker.pose.orientation = tf::createQuaternionMsgFromYaw(waypoints[1][2]);
 
         marker_pub.publish(marker);
+        ROS_INFO("Object is dropped!");
+        // after successful drop off exit the node
+        break;
       }
     }
 
